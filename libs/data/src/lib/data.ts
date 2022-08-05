@@ -5,7 +5,7 @@ export interface Todo{
 }
 
 export enum Status {
-  PENDING = 'Pending',
-  IN_PROGRESS = 'In progress',
-  DONE = 'Done',
+  PENDING = 'pending',
+  IN_PROGRESS = 'in progress',
+  DONE = 'done',
 }

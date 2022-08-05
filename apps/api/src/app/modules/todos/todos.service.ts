@@ -2,7 +2,6 @@ import { BadRequestException, ConflictException, Inject, Injectable, InternalSer
 import { Todo } from '@nxreact/data';
 import { Model } from 'mongoose';
 import { TodoDto } from './dto/todo-dto';
-import { UpdateTodoDto } from './dto/updateTodo-dto';
 
 @Injectable()
 export class TodosService {
@@ -31,9 +30,9 @@ export class TodosService {
         }
     }
 
-    async updateTodo(updateTodo: UpdateTodoDto){
+    async updateTodo(id:string, updateTodo: TodoDto){
         try {
-            const todoEdited = await this.todoModel.findByIdAndUpdate(updateTodo.id,updateTodo.todo,{new:true}) 
+            const todoEdited = await this.todoModel.findByIdAndUpdate(id, updateTodo, {new:true}) 
             return {todo: todoEdited}
         } catch (error) {
             console.log(error);

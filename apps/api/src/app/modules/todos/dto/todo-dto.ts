@@ -1,6 +1,6 @@
 import { Type } from "class-transformer";
-import { IsDate, IsEmail, isNotEmpty, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
-
+import { IsDate, IsEmail, IsEnum, isNotEmpty, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
+import { Status } from '@nxreact/data'
 export class TodoDto{
 
     @IsNotEmpty()
@@ -16,6 +16,6 @@ export class TodoDto{
     description: string;
 
     @IsNotEmpty()
-    @IsString()
-    status: string;
+    @IsEnum(Status)
+    status: Status;
 }
