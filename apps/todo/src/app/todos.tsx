@@ -6,7 +6,6 @@ import { Todo, Status } from '@nxreact/data'
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
-
 const url = "http://localhost:3333"
 
 const style = {
@@ -24,42 +23,6 @@ const style = {
 export const Todos = () => {
 
     const [todos, setTodos] = useState<Todo[]>([]);
-
-    useEffect(() => {
-        getTodos()
-
-
-    }, []);
-
-    const getTodos = () => {
-        fetch(url + '/api/todos')
-            .then((response) => response.json())
-            .then((res) => setTodos(res.todos))
-            .catch((error) => console.error(error));
-        console.log(todos);
-    }
-    const addTodo = () => {
-        fetch(url + '/api/todo', {
-            method: 'POST',
-            body: '',
-        })
-            .then((_) => _.json())
-            .then((newTodo) => {
-                setTodos([...todos, newTodo]);
-            });
-    }
-
-    const [dense, setDense] = React.useState(false);
-    const [secondary, setSecondary] = React.useState(false);
-
-    const [open, setOpen] = React.useState(false);
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
-
-    const createToDo = () => {
-
-    }
-
     const todoValidationSchema = Yup.object().shape({
         title: Yup.string()
             .required("Enter a title")
@@ -71,6 +34,43 @@ export const Todos = () => {
             .max(1000, 'description can not be longer than 1000 characters')
     });
 
+    useEffect(() => {
+        getTodos()
+
+    }, []);
+
+    const getTodos = () => {
+        fetch(url + '/api/todos')
+            .then((response) => response.json())
+            .then((res) => setTodos(res.todos))
+            .catch((error) => console.error(error));
+        console.log(todos);
+    }
+    const addTodo = () => {
+        console.log(formik.values);
+        fetch(url + '/api/todos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formik.values)
+        })
+            .then((response) => response.json())
+            .then((res) => {
+                console.log((res));
+                if(res.todo){
+                    setSuccess(true)
+                    getTodos()
+                }
+                else{
+                    setError(true)
+                }
+
+            }).catch(async error => {
+                setError(true)
+            })
+    }
+
     const formik = useFormik<Todo>({
         initialValues: {
             title: '',
@@ -78,9 +78,27 @@ export const Todos = () => {
             status: Status.PENDING
         },
         validationSchema: todoValidationSchema,
-        onSubmit: createToDo
+        onSubmit: addTodo
     });
 
+    const [dense, setDense] = React.useState(false);
+    const [secondary, setSecondary] = React.useState(true);
+
+    const [open, setOpen] = React.useState(false);
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
+
+    const [errorMessage, setErrorMessage] = useState<string>("Something went wrong")
+    const [error, setError] = useState<boolean>(false)
+    const [success, setSuccess] = useState<boolean>(false)
+    useEffect(() => {
+        const time = setTimeout(() => { setError(false) }, 4500)
+        return () => clearTimeout(time)
+    }, [error])
+    useEffect(() => {
+        const time = setTimeout(() => { setSuccess(false); handleClose() }, 2500)
+        return () => clearTimeout(time)
+    }, [success])
 
     return (
         <div>
@@ -95,6 +113,8 @@ export const Todos = () => {
                         <Box sx={style}>
                             <form onSubmit={formik.handleSubmit}>
                                 <Stack spacing={2}>
+                                    {success && <Alert sx={{ marginBottom: '20px' }} severity="success">Todo has been created succesfully</Alert>}
+                                    {error && <Alert sx={{ marginBottom: '20px' }} severity="error">{errorMessage}</Alert>}
                                     <TextField
                                         id="title"
                                         label="Title"
@@ -132,7 +152,6 @@ export const Todos = () => {
                 <Button variant="contained" onClick={handleOpen} >Create New Task</Button>
 
                 <Box sx={{ flexGrow: 1 }}>
-
                     <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
                         Tasks
                     </Typography>
