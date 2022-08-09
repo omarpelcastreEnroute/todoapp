@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Alert, Box, Button, Card, Checkbox, Container, FormControlLabel, FormGroup, Grid, IconButton, List, ListItem, ListItemAvatar, ListItemIcon, ListItemText, Modal, Stack, styled, TextField, Typography } from '@mui/material';
+import { Alert, Autocomplete, Box, Button, Card, Checkbox, Container, FormControlLabel, FormGroup, Grid, IconButton, List, ListItem, ListItemAvatar, ListItemIcon, ListItemText, Modal, Stack, styled, TextField, Typography } from '@mui/material';
 import { Delete } from '@mui/icons-material';
 import EditIcon from '@mui/icons-material/Edit';
 import { Todo, Status } from '@nxreact/data'
@@ -33,6 +33,17 @@ export const Todos = () => {
             .min(100, 'description must have at least 100 characters')
             .max(1000, 'description can not be longer than 1000 characters')
     });
+    const todoEditValidationSchema = Yup.object().shape({
+        title: Yup.string()
+            .required("Enter a title")
+            .min(12, 'Title must have at least 12 characters')
+            .max(120, 'Title can not be longer than 120 characters'),
+        description: Yup.string()
+            .required("Enter a description")
+            .min(100, 'description must have at least 100 characters')
+            .max(1000, 'description can not be longer than 1000 characters'),
+        status: Yup.mixed().oneOf([Status.PENDING, Status.IN_PROGRESS, Status.DONE]).required()
+    });
 
     useEffect(() => {
         getTodos()
@@ -44,10 +55,8 @@ export const Todos = () => {
             .then((response) => response.json())
             .then((res) => setTodos(res.todos))
             .catch((error) => console.error(error));
-        console.log(todos);
     }
     const addTodo = () => {
-        console.log(formik.values);
         fetch(url + '/api/todos', {
             method: 'POST',
             headers: {
@@ -57,19 +66,50 @@ export const Todos = () => {
         })
             .then((response) => response.json())
             .then((res) => {
-                console.log((res));
-                if(res.todo){
+                if (res.todo) {
                     setSuccess(true)
                     getTodos()
                 }
-                else{
+                else {
                     setError(true)
                 }
 
             }).catch(async error => {
                 setError(true)
             })
+
+        setTimeout(handleClose, 2500)
     }
+    const setEditToDo = () => {
+        fetch(url + '/api/todos/' + selectedId, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(editForm.values)
+        })
+            .then((response) => response.json())
+            .then((res) => {
+                if (res.todo) {
+                    setSuccess(true)
+                    getTodos()
+                }
+                else {
+                    setError(true)
+                }
+
+            }).catch(async error => {
+                setError(true)
+            })
+
+        setTimeout(handleClose, 2500)
+    }
+
+    const [todoSelected, setTodoSelected] = useState<Todo>({
+        title: '',
+        description: '',
+        status: Status.PENDING
+    })
 
     const formik = useFormik<Todo>({
         initialValues: {
@@ -80,25 +120,44 @@ export const Todos = () => {
         validationSchema: todoValidationSchema,
         onSubmit: addTodo
     });
+    const editForm = useFormik<Todo>({
+        initialValues: todoSelected,
+        validationSchema: todoEditValidationSchema,
+        onSubmit: setEditToDo
+    });
 
-    const [dense, setDense] = React.useState(false);
-    const [secondary, setSecondary] = React.useState(true);
+    const [dense, setDense] = useState(false);
+    const [secondary, setSecondary] = useState(true);
 
-    const [open, setOpen] = React.useState(false);
+    const [open, setOpen] = useState(false);
+    const [openEdit, setOpenEdit] = useState(false);
     const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
+    const handleOpenEdit = () => setOpenEdit(true);
+    const handleClose = () => { setOpen(false); setOpenEdit(false) }
 
     const [errorMessage, setErrorMessage] = useState<string>("Something went wrong")
     const [error, setError] = useState<boolean>(false)
     const [success, setSuccess] = useState<boolean>(false)
+    const [selectedId, setSelectedId] = useState<string>('')
+
+
     useEffect(() => {
         const time = setTimeout(() => { setError(false) }, 4500)
         return () => clearTimeout(time)
     }, [error])
     useEffect(() => {
-        const time = setTimeout(() => { setSuccess(false); handleClose() }, 2500)
+        const time = setTimeout(() => { setSuccess(false); }, 2500)
         return () => clearTimeout(time)
     }, [success])
+
+    const openEditView = (todo: any) => {
+        setTodoSelected(todo)
+        setSelectedId(todo._id)
+        editForm.values.title = todo.title
+        editForm.values.description = todo.description
+        editForm.values.status = todo.status
+        handleOpenEdit()
+    }
 
     return (
         <div>
@@ -107,8 +166,6 @@ export const Todos = () => {
                     <Modal
                         open={open}
                         onClose={handleClose}
-                        aria-labelledby="modal-modal-title"
-                        aria-describedby="modal-modal-description"
                     >
                         <Box sx={style}>
                             <form onSubmit={formik.handleSubmit}>
@@ -142,7 +199,67 @@ export const Todos = () => {
                                     </Button>
                                 </Stack>
                             </form>
-
+                        </Box>
+                    </Modal>
+                </div>
+                <div>
+                    <Modal
+                        open={openEdit}
+                        onClose={handleClose}
+                    >
+                        <Box sx={style}>
+                            <form onSubmit={editForm.handleSubmit}>
+                                <Stack spacing={2} sx={{ textAlign: 'center' }}>
+                                    {success && <Alert sx={{ marginBottom: '20px' }} severity="success">Todo has been edited succesfully</Alert>}
+                                    {error && <Alert sx={{ marginBottom: '20px' }} severity="error">{errorMessage}</Alert>}
+                                    <Typography variant='h4'>Edit Todo</Typography>
+                                    <TextField
+                                        id="titleEdit"
+                                        label="Title"
+                                        type="text"
+                                        name='title'
+                                        value={editForm.values.title}
+                                        onChange={editForm.handleChange}
+                                        error={editForm.touched.title && Boolean(editForm.errors.title)}
+                                        helperText={editForm.touched.title && editForm.errors.title}
+                                    />
+                                    <TextField
+                                        id="descriptionEdit"
+                                        label="Description"
+                                        name='description'
+                                        multiline
+                                        fullWidth
+                                        rows={8}
+                                        value={editForm.values.description}
+                                        onChange={editForm.handleChange}
+                                        error={editForm.touched.description && Boolean(editForm.errors.description)}
+                                        helperText={editForm.touched.description && editForm.errors.description}
+                                        variant="outlined"
+                                    />
+                                    <Autocomplete
+                                        id='status-option'
+                                        fullWidth
+                                        sx={{ width: '100%' }}
+                                        options={[Status.PENDING, Status.IN_PROGRESS, Status.DONE]}
+                                        value={editForm.values.status}
+                                        onChange={(event,value) => {
+                                            editForm.setFieldValue("status",value)
+                                        }}
+                                        renderInput={(params) =>
+                                            <TextField
+                                                {...params}
+                                                label="Select a status"
+                                                margin='normal'
+                                                error={editForm.touched.status && Boolean(editForm.errors.status)}
+                                                helperText={editForm.touched.status && editForm.errors.status}
+                                                // inputProps={{ readOnly: true }}
+                                            />}
+                                    />
+                                    <Button variant="contained" color='success' size="large" type='submit'>
+                                        Edit
+                                    </Button>
+                                </Stack>
+                            </form>
                         </Box>
                     </Modal>
                 </div>
@@ -174,7 +291,7 @@ export const Todos = () => {
                                         </Button>
                                     </ListItemIcon>
                                     <ListItemIcon>
-                                        <Button>
+                                        <Button variant='outlined' onClick={() => openEditView(todo)}>
                                             <EditIcon />
                                         </Button>
                                     </ListItemIcon>
