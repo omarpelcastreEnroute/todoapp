@@ -40,5 +40,18 @@ export class TodosService {
             throw new InternalServerErrorException()
         }
     }
+
+    async deleteTodo(id: string){
+        try {
+            const todo = await this.todoModel.findByIdAndDelete(id) 
+            if(!todo._id)
+                return new NotFoundException('todo not found')
+            return true
+
+            
+        } catch (error) {
+            throw new InternalServerErrorException()
+        }
+    }
    
 }

@@ -27,4 +27,9 @@ export class TodosController {
         return this.todoService.updateTodo(id ,todo)
     }
 
+    @Delete(':id')
+    deleteTodo(@Param('id') id: string){
+        return this.todoService.deleteTodo(id)
+    }
+
 }
