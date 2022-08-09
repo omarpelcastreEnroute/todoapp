@@ -11,10 +11,10 @@ const root = ReactDOM.createRoot(
 const theme = createTheme({
   palette:{
     primary:{
-      main: '#08c7d9'
+      main: '#1D3557'
     },
     secondary:{
-      main: '#FCE4D8'
+      main: '#457B9D'
     },
     success:{
       main: '#00CCA0'
@@ -23,7 +23,14 @@ const theme = createTheme({
       main:'#fbd87f'
     },
     error: {
-      main: '#F75590'
+      main: '#E63946'
+    },
+    info:{
+      main: '#A8DADC'
+    },
+    background: {
+      default: '#F1FAEE',
+      paper: '#F1F9F8'
     }
   },
   shape: {

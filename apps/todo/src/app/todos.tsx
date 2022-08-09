@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Alert, Autocomplete, Box, Button, Card, Checkbox, Container, FormControlLabel, FormGroup, Grid, IconButton, List, ListItem, ListItemAvatar, ListItemIcon, ListItemText, Modal, Stack, styled, TextField, Typography } from '@mui/material';
-import { Delete } from '@mui/icons-material';
+import { CancelOutlined, Delete } from '@mui/icons-material';
 import EditIcon from '@mui/icons-material/Edit';
 import { Todo, Status } from '@nxreact/data'
 import { useFormik } from 'formik';
@@ -122,10 +122,34 @@ export const Todos = () => {
                     setErrorMessage('Something went wrong trying to change todo status')
                     setError(true)
                 }
-
             }).catch(async error => {
                 setError(true)
             })
+    }
+    const deleteTodo = () => {
+        if (selectedId == '') return
+        fetch(url + '/api/todos/' + selectedId, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        })
+            .then((response) => response.json())
+            .then((res) => {
+                if (res == true) {
+                    getTodos()
+                    setSuccessDelete(true)
+                }
+                else {
+                    setErrorMessage('Something went wrong trying to delete todo')
+                    setError(true)
+                }
+
+            }).catch(async error => {
+                setErrorMessage('Something went wrong trying to delete todo')
+                setError(true)
+            })
+        handleClose()
     }
 
     const [todoSelected, setTodoSelected] = useState<Todo>({
@@ -153,15 +177,22 @@ export const Todos = () => {
     const [secondary, setSecondary] = useState(true);
 
     const [open, setOpen] = useState(false);
+    const [openDelete, setOpenDelete] = useState(false);
     const [showFlag, setShowFlag] = useState(false);
     const [showTodo, setShowTodo] = useState(false);
     const handleOpen = () => setOpen(true);
+    const handleOpenDelete = (todo: any) => {
+        setSelectedId(todo._id)
+        setTodoSelected(todo)
+        setOpenDelete(true);
+    }
     const handleOpenTodoView = () => setShowTodo(true);
-    const handleClose = () => { setOpen(false); setShowTodo(false); setShowFlag(false) }
+    const handleClose = () => { setOpen(false); setShowTodo(false); setOpenDelete(false); setShowFlag(false) }
 
     const [errorMessage, setErrorMessage] = useState<string>("Something went wrong")
     const [error, setError] = useState<boolean>(false)
     const [success, setSuccess] = useState<boolean>(false)
+    const [successDelete, setSuccessDelete] = useState<boolean>(false)
     const [selectedId, setSelectedId] = useState<string>('')
 
     useEffect(() => {
@@ -172,6 +203,10 @@ export const Todos = () => {
         const time = setTimeout(() => { setSuccess(false); }, 2500)
         return () => clearTimeout(time)
     }, [success])
+    useEffect(() => {
+        const time = setTimeout(() => { setSuccessDelete(false); }, 2500)
+        return () => clearTimeout(time)
+    }, [successDelete])
 
     const openEditView = (todo: any) => {
         setShowFlag(false)
@@ -234,6 +269,32 @@ export const Todos = () => {
                 </div>
                 <div>
                     <Modal
+                        open={openDelete}
+                        onClose={handleClose}
+                    >
+                        <Box sx={style}>
+                            <Typography textAlign={'center'} variant='subtitle1' marginBottom={3}>
+                                Are you sure you want to delete <b>{todoSelected.title}</b>?
+                            </Typography>
+                            <Stack direction={'row'} justifyContent='center' spacing={2}>
+                                <Button variant="outlined" size="large" color='secondary'
+                                    onClick={handleClose}
+                                >
+                                    <CancelOutlined />
+                                    cancel
+                                </Button>
+                                <Button variant="outlined" size="large" color='error'
+                                    onClick={deleteTodo}
+                                >
+                                    <Delete />
+                                    delete
+                                </Button>
+                            </Stack>
+                        </Box>
+                    </Modal>
+                </div>
+                <div>
+                    <Modal
                         open={showTodo}
                         onClose={handleClose}
                     >
@@ -266,11 +327,11 @@ export const Todos = () => {
                                                     // inputProps={{ readOnly: true }}
                                                     />}
                                             />
-                                            <Button>
+                                            <Button color='error' onClick={() => handleOpenDelete(todoSelected)}>
                                                 <Delete />
                                                 delete
                                             </Button>
-                                            <Button onClick={() => openEditView(todoSelected)}>
+                                            <Button color='secondary' onClick={() => openEditView(todoSelected)}>
                                                 <EditIcon />
                                                 edit task
                                             </Button>
@@ -339,6 +400,8 @@ export const Todos = () => {
                 <Typography variant='h2'> Todo App</Typography>
                 <Button variant="contained" onClick={handleOpen} >Create New Task</Button>
                 <Box sx={{ flexGrow: 1 }}>
+                    {successDelete && <Alert sx={{ margin: '20px' }} severity="success">Todo has been deleted succesfully</Alert>}
+                    {error && <Alert sx={{ margin: '20px' }} severity="error">{errorMessage}</Alert>}
                     <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
                         Tasks
                     </Typography>
@@ -356,12 +419,12 @@ export const Todos = () => {
                                         </Button>
                                     </ListItemIcon>
                                     <ListItemIcon>
-                                        <Button>
+                                        <Button color='error' onClick={() => handleOpenDelete(todo)}>
                                             <Delete />
                                         </Button>
                                     </ListItemIcon>
                                     <ListItemIcon>
-                                        <Button onClick={() => openEditView(todo)}>
+                                        <Button color='secondary' onClick={() => openEditView(todo)}>
                                             <EditIcon />
                                         </Button>
                                     </ListItemIcon>
