@@ -7,13 +7,13 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
 const url = "http://localhost:3333"
-
 const style = {
     position: 'absolute' as 'absolute',
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-    width: 400,
+    width: 'auto',
+    minWidth: '400px',
     bgcolor: 'background.paper',
     borderRadius: '20px',
     boxShadow: 24,
@@ -47,7 +47,6 @@ export const Todos = () => {
 
     useEffect(() => {
         getTodos()
-
     }, []);
 
     const getTodos = () => {
@@ -104,6 +103,30 @@ export const Todos = () => {
 
         setTimeout(handleClose, 2500)
     }
+    const changeTodoStatus = (todo: Todo, value: Status | null) => {
+        if (!value) return
+        todo.status = value
+        fetch(url + '/api/todos/' + selectedId, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(todo)
+        })
+            .then((response) => response.json())
+            .then((res) => {
+                if (res.todo) {
+                    getTodos()
+                }
+                else {
+                    setErrorMessage('Something went wrong trying to change todo status')
+                    setError(true)
+                }
+
+            }).catch(async error => {
+                setError(true)
+            })
+    }
 
     const [todoSelected, setTodoSelected] = useState<Todo>({
         title: '',
@@ -130,19 +153,19 @@ export const Todos = () => {
     const [secondary, setSecondary] = useState(true);
 
     const [open, setOpen] = useState(false);
-    const [openEdit, setOpenEdit] = useState(false);
+    const [showFlag, setShowFlag] = useState(false);
+    const [showTodo, setShowTodo] = useState(false);
     const handleOpen = () => setOpen(true);
-    const handleOpenEdit = () => setOpenEdit(true);
-    const handleClose = () => { setOpen(false); setOpenEdit(false) }
+    const handleOpenTodoView = () => setShowTodo(true);
+    const handleClose = () => { setOpen(false); setShowTodo(false); setShowFlag(false) }
 
     const [errorMessage, setErrorMessage] = useState<string>("Something went wrong")
     const [error, setError] = useState<boolean>(false)
     const [success, setSuccess] = useState<boolean>(false)
     const [selectedId, setSelectedId] = useState<string>('')
 
-
     useEffect(() => {
-        const time = setTimeout(() => { setError(false) }, 4500)
+        const time = setTimeout(() => { setError(false); setErrorMessage("Something went wrong") }, 4500)
         return () => clearTimeout(time)
     }, [error])
     useEffect(() => {
@@ -151,12 +174,19 @@ export const Todos = () => {
     }, [success])
 
     const openEditView = (todo: any) => {
+        setShowFlag(false)
         setTodoSelected(todo)
         setSelectedId(todo._id)
         editForm.values.title = todo.title
         editForm.values.description = todo.description
         editForm.values.status = todo.status
-        handleOpenEdit()
+        handleOpenTodoView()
+    }
+    const showTodoModal = (todo: any) => {
+        setTodoSelected(todo)
+        setSelectedId(todo._id)
+        setShowFlag(true)
+        handleOpenTodoView()
     }
 
     return (
@@ -204,70 +234,110 @@ export const Todos = () => {
                 </div>
                 <div>
                     <Modal
-                        open={openEdit}
+                        open={showTodo}
                         onClose={handleClose}
                     >
                         <Box sx={style}>
-                            <form onSubmit={editForm.handleSubmit}>
-                                <Stack spacing={2} sx={{ textAlign: 'center' }}>
-                                    {success && <Alert sx={{ marginBottom: '20px' }} severity="success">Todo has been edited succesfully</Alert>}
+                            {showFlag ? (
+                                <Stack spacing={2}>
                                     {error && <Alert sx={{ marginBottom: '20px' }} severity="error">{errorMessage}</Alert>}
-                                    <Typography variant='h4'>Edit Todo</Typography>
-                                    <TextField
-                                        id="titleEdit"
-                                        label="Title"
-                                        type="text"
-                                        name='title'
-                                        value={editForm.values.title}
-                                        onChange={editForm.handleChange}
-                                        error={editForm.touched.title && Boolean(editForm.errors.title)}
-                                        helperText={editForm.touched.title && editForm.errors.title}
-                                    />
-                                    <TextField
-                                        id="descriptionEdit"
-                                        label="Description"
-                                        name='description'
-                                        multiline
-                                        fullWidth
-                                        rows={8}
-                                        value={editForm.values.description}
-                                        onChange={editForm.handleChange}
-                                        error={editForm.touched.description && Boolean(editForm.errors.description)}
-                                        helperText={editForm.touched.description && editForm.errors.description}
-                                        variant="outlined"
-                                    />
-                                    <Autocomplete
-                                        id='status-option'
-                                        fullWidth
-                                        sx={{ width: '100%' }}
-                                        options={[Status.PENDING, Status.IN_PROGRESS, Status.DONE]}
-                                        value={editForm.values.status}
-                                        onChange={(event,value) => {
-                                            editForm.setFieldValue("status",value)
-                                        }}
-                                        renderInput={(params) =>
-                                            <TextField
-                                                {...params}
-                                                label="Select a status"
-                                                margin='normal'
-                                                error={editForm.touched.status && Boolean(editForm.errors.status)}
-                                                helperText={editForm.touched.status && editForm.errors.status}
-                                                // inputProps={{ readOnly: true }}
-                                            />}
-                                    />
-                                    <Button variant="contained" color='success' size="large" type='submit'>
-                                        Edit
-                                    </Button>
+                                    <Typography variant='h4'>
+                                        {todoSelected.title}
+                                    </Typography>
+                                    <Typography variant='body1'>
+                                        {todoSelected.description}
+                                    </Typography>
+                                    <Button disabled variant='text'>{todoSelected.status}</Button>
+                                    {(todoSelected.status == Status.PENDING || todoSelected.status == Status.IN_PROGRESS) &&
+                                        <Stack direction='row' justifyContent={'end'} margin={0} spacing={0}>
+                                            <Autocomplete
+                                                id='status-option'
+                                                sx={{ width: '50%' }}
+                                                options={[Status.PENDING, Status.IN_PROGRESS, Status.DONE]}
+                                                value={todoSelected.status}
+                                                onChange={(event, value) => {
+                                                    changeTodoStatus(todoSelected, value);
+                                                }}
+                                                renderInput={(params) =>
+                                                    <TextField
+                                                        {...params}
+                                                        label="change status"
+                                                        margin='none'
+                                                    // inputProps={{ readOnly: true }}
+                                                    />}
+                                            />
+                                            <Button>
+                                                <Delete />
+                                                delete
+                                            </Button>
+                                            <Button onClick={() => openEditView(todoSelected)}>
+                                                <EditIcon />
+                                                edit task
+                                            </Button>
+                                        </Stack>
+                                    }
                                 </Stack>
-                            </form>
+                            )
+                                :
+                                (
+                                    <form onSubmit={editForm.handleSubmit}>
+                                        <Stack spacing={2} sx={{ textAlign: 'center' }}>
+                                            {success && <Alert sx={{ marginBottom: '20px' }} severity="success">Todo has been edited succesfully</Alert>}
+                                            {error && <Alert sx={{ marginBottom: '20px' }} severity="error">{errorMessage}</Alert>}
+                                            <Typography variant='h4'>Edit Todo</Typography>
+                                            <TextField
+                                                id="titleEdit"
+                                                label="Title"
+                                                type="text"
+                                                name='title'
+                                                value={editForm.values.title}
+                                                onChange={editForm.handleChange}
+                                                error={editForm.touched.title && Boolean(editForm.errors.title)}
+                                                helperText={editForm.touched.title && editForm.errors.title}
+                                            />
+                                            <TextField
+                                                id="descriptionEdit"
+                                                label="Description"
+                                                name='description'
+                                                multiline
+                                                fullWidth
+                                                rows={8}
+                                                value={editForm.values.description}
+                                                onChange={editForm.handleChange}
+                                                error={editForm.touched.description && Boolean(editForm.errors.description)}
+                                                helperText={editForm.touched.description && editForm.errors.description}
+                                                variant="outlined"
+                                            />
+                                            <Autocomplete
+                                                id='status-option'
+                                                fullWidth
+                                                sx={{ width: '100%' }}
+                                                options={[Status.PENDING, Status.IN_PROGRESS, Status.DONE]}
+                                                value={editForm.values.status}
+                                                onChange={(event, value) => {
+                                                    editForm.setFieldValue("status", value)
+                                                }}
+                                                renderInput={(params) =>
+                                                    <TextField
+                                                        {...params}
+                                                        label="Select a status"
+                                                        margin='normal'
+                                                        error={editForm.touched.status && Boolean(editForm.errors.status)}
+                                                        helperText={editForm.touched.status && editForm.errors.status}
+                                                    // inputProps={{ readOnly: true }}
+                                                    />}
+                                            />
+                                            <Button variant="contained" color='success' size="large" type='submit'>
+                                                Edit
+                                            </Button>
+                                        </Stack>
+                                    </form>
+                                )}
                         </Box>
                     </Modal>
                 </div>
-
-
                 <Typography variant='h2'> Todo App</Typography>
                 <Button variant="contained" onClick={handleOpen} >Create New Task</Button>
-
                 <Box sx={{ flexGrow: 1 }}>
                     <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
                         Tasks
@@ -276,12 +346,12 @@ export const Todos = () => {
                         {todos.map((todo: any) => (
                             <Card key={todo._id} sx={{ marginBottom: '10px' }}>
                                 <ListItem >
-                                    <ListItemText
+                                    <ListItemText onClick={() => showTodoModal(todo)}
                                         primary={todo.title}
                                         secondary={secondary ? todo.description : null}
                                     />
                                     <ListItemIcon>
-                                        <Button variant='outlined' disabled={true}>
+                                        <Button disabled={true}>
                                             {todo.status}
                                         </Button>
                                     </ListItemIcon>
@@ -291,7 +361,7 @@ export const Todos = () => {
                                         </Button>
                                     </ListItemIcon>
                                     <ListItemIcon>
-                                        <Button variant='outlined' onClick={() => openEditView(todo)}>
+                                        <Button onClick={() => openEditView(todo)}>
                                             <EditIcon />
                                         </Button>
                                     </ListItemIcon>
@@ -299,17 +369,7 @@ export const Todos = () => {
                             </Card>
                         ))}
                     </List>
-
                     <FormGroup row>
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={dense}
-                                    onChange={(event) => setDense(event.target.checked)}
-                                />
-                            }
-                            label="Enable dense"
-                        />
                         <FormControlLabel
                             control={
                                 <Checkbox
@@ -317,12 +377,10 @@ export const Todos = () => {
                                     onChange={(event) => setSecondary(event.target.checked)}
                                 />
                             }
-                            label="Enable secondary text"
+                            label="Show description"
                         />
                     </FormGroup>
-
                 </Box>
-
             </Container>
         </div>
     )
