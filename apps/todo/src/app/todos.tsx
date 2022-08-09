@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Alert, Autocomplete, Box, Button, Card, Checkbox, Container, FormControlLabel, FormGroup, Grid, IconButton, List, ListItem, ListItemAvatar, ListItemIcon, ListItemText, Modal, Stack, styled, TextField, Typography } from '@mui/material';
+import { Alert, Autocomplete, Box, Button, Card, Checkbox, Container, FormControlLabel, FormGroup, Grid, IconButton, List, ListItem, ListItemAvatar, ListItemIcon, ListItemText, Modal, Pagination, Stack, styled, TextField, Typography } from '@mui/material';
 import { AddCircleOutlineOutlined, CancelOutlined, Delete, SaveOutlined } from '@mui/icons-material';
 import EditIcon from '@mui/icons-material/Edit';
 import { Todo, Status } from '@nxreact/data'
@@ -19,6 +19,8 @@ const style = {
     boxShadow: 24,
     p: 4,
 };
+const itemsPerPage = 10;
+
 
 export const Todos = () => {
 
@@ -45,6 +47,12 @@ export const Todos = () => {
         status: Yup.mixed().oneOf([Status.PENDING, Status.IN_PROGRESS, Status.DONE]).required()
     });
 
+    const [currentPage, setCurrentPage] = useState(0)
+    const [totalPages, setTotalPages] = useState(0)
+    const filteredTodos = (): Todo[] => {
+        return todos.slice(currentPage*itemsPerPage, currentPage*itemsPerPage + itemsPerPage);
+    }
+
     useEffect(() => {
         getTodos()
     }, []);
@@ -52,7 +60,7 @@ export const Todos = () => {
     const getTodos = () => {
         fetch(url + '/api/todos')
             .then((response) => response.json())
-            .then((res) => setTodos(res.todos))
+            .then((res) => {setTodos(res.todos); setTotalPages(Math.ceil(res.todos.length / itemsPerPage))})
             .catch((error) => console.error(error));
     }
     const addTodo = () => {
@@ -224,6 +232,10 @@ export const Todos = () => {
         handleOpenTodoView()
     }
 
+    const handlePaginationChange = (e:any, newPage:any) =>{
+        setCurrentPage(newPage - 1);
+    }
+
     return (
         <div>
             <Container>
@@ -267,7 +279,7 @@ export const Todos = () => {
                                             cancel
                                         </Button>
                                         <Button variant="outlined" color='success' size="large" type='submit'>
-                                            <AddCircleOutlineOutlined/>
+                                            <AddCircleOutlineOutlined />
                                             Create
                                         </Button>
                                     </Stack>
@@ -424,7 +436,7 @@ export const Todos = () => {
                         Tasks
                     </Typography>
                     <List dense={dense}>
-                        {todos.map((todo: any) => (
+                        {filteredTodos().map((todo: any) => (
                             <Card key={todo._id} sx={{ marginBottom: '10px' }}>
                                 <ListItem >
                                     <ListItemText onClick={() => showTodoModal(todo)}
@@ -450,6 +462,10 @@ export const Todos = () => {
                             </Card>
                         ))}
                     </List>
+                    <Pagination count={totalPages} variant="outlined" color="primary" 
+                        siblingCount={1}
+                        boundaryCount={1}
+                        onChange={(e,newPage)=>handlePaginationChange(e, newPage)} />
                     <FormGroup row>
                         <FormControlLabel
                             control={
