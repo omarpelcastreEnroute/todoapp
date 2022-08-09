@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Alert, Autocomplete, Box, Button, Card, Checkbox, Container, FormControlLabel, FormGroup, Grid, IconButton, List, ListItem, ListItemAvatar, ListItemIcon, ListItemText, Modal, Stack, styled, TextField, Typography } from '@mui/material';
-import { CancelOutlined, Delete } from '@mui/icons-material';
+import { AddCircleOutlineOutlined, CancelOutlined, Delete, SaveOutlined } from '@mui/icons-material';
 import EditIcon from '@mui/icons-material/Edit';
 import { Todo, Status } from '@nxreact/data'
 import { useFormik } from 'formik';
@@ -259,9 +259,18 @@ export const Todos = () => {
                                         helperText={formik.touched.description && formik.errors.description}
                                         variant="outlined"
                                     />
-                                    <Button variant="contained" color='success' size="large" type='submit'>
-                                        Create
-                                    </Button>
+                                    <Stack direction={'row'} justifyContent='center' spacing={2}>
+                                        <Button variant="outlined" size="large" color='secondary'
+                                            onClick={handleClose}
+                                        >
+                                            <CancelOutlined />
+                                            cancel
+                                        </Button>
+                                        <Button variant="outlined" color='success' size="large" type='submit'>
+                                            <AddCircleOutlineOutlined/>
+                                            Create
+                                        </Button>
+                                    </Stack>
                                 </Stack>
                             </form>
                         </Box>
@@ -388,9 +397,18 @@ export const Todos = () => {
                                                     // inputProps={{ readOnly: true }}
                                                     />}
                                             />
-                                            <Button variant="contained" color='success' size="large" type='submit'>
-                                                Edit
-                                            </Button>
+                                            <Stack direction={'row'} justifyContent='center' spacing={2}>
+                                                <Button variant="outlined" size="large" color='secondary'
+                                                    onClick={handleClose}
+                                                >
+                                                    <CancelOutlined />
+                                                    cancel
+                                                </Button>
+                                                <Button variant="outlined" color='success' size="large" type='submit'>
+                                                    <SaveOutlined />
+                                                    Save
+                                                </Button>
+                                            </Stack>
                                         </Stack>
                                     </form>
                                 )}
