@@ -74,13 +74,21 @@ export const Todos = () => {
         fetch(url + '/api/todos')
             .then((response) => response.json())
             .then((res) => {
-                setTodos(res.todos);
-                if (filter == 'all')
-                    setTotalPages(Math.ceil(res.todos.length / itemsPerPage))
-                else {
-                    let todosFilteredAux = res.todos.filter((todo:Todo) => todo.status == filter)
-                    setCurrentPage(0)
-                    setTotalPages(Math.ceil(todosFilteredAux.length / itemsPerPage))
+                if(res.todos){
+                    setTodos(res.todos);
+                    if (filter == 'all')
+                        setTotalPages(Math.ceil(res.todos.length / itemsPerPage))
+                    else {
+                        let todosFilteredAux = res.todos.filter((todo:Todo) => todo.status == filter)
+                        setCurrentPage(0)
+                        setTotalPages(Math.ceil(todosFilteredAux.length / itemsPerPage))
+                    }
+                }else{
+                    if(res.message)
+                        setErrorMessage(res.message)
+                    else
+                        setErrorMessage("Something went wrong trying to get todos")
+                    setError(true)
                 }
             })
             .catch((error) => console.error(error));
