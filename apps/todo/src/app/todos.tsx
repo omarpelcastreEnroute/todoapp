@@ -19,10 +19,9 @@ const style = {
     boxShadow: 24,
     p: 4,
 };
-const itemsPerPage = 8;
+const itemsPerPage = 15;
 
 export const Todos = () => {
-
     const [todos, setTodos] = useState<Todo[]>([]);
     const todoValidationSchema = Yup.object().shape({
         title: Yup.string()
@@ -51,22 +50,19 @@ export const Todos = () => {
     const filteredTodos = (): Todo[] => {
         if (filter == 'all')
             return todos.slice(currentPage * itemsPerPage, currentPage * itemsPerPage + itemsPerPage);
-
         let todosFilteredAux = todos.filter((todo) => todo.status == filter)
-        // setCurrentPage(0)
-        //setTotalPages(Math.ceil(todosFilteredAux.length / itemsPerPage))
         return todosFilteredAux.slice(currentPage * itemsPerPage, currentPage * itemsPerPage + itemsPerPage);
 
     }
 
     const changeFilter = (value: Status | string) => {
-        if (value !== 'all'){
+        if (value == 'all') {
+            setCurrentPage(0)
+            setTotalPages(Math.ceil(todos.length / itemsPerPage))
+        } else {
             let todosFilteredAux = todos.filter((todo) => todo.status == value)
             setCurrentPage(0)
             setTotalPages(Math.ceil(todosFilteredAux.length / itemsPerPage))
-        }else{
-            setCurrentPage(0)
-            setTotalPages(Math.ceil(todos.length / itemsPerPage))
         }
         setFilter(value)
     }
@@ -77,7 +73,16 @@ export const Todos = () => {
     const getTodos = () => {
         fetch(url + '/api/todos')
             .then((response) => response.json())
-            .then((res) => { setTodos(res.todos); setTotalPages(Math.ceil(res.todos.length / itemsPerPage)) })
+            .then((res) => {
+                setTodos(res.todos);
+                if (filter == 'all')
+                    setTotalPages(Math.ceil(res.todos.length / itemsPerPage))
+                else {
+                    let todosFilteredAux = res.todos.filter((todo:Todo) => todo.status == filter)
+                    setCurrentPage(0)
+                    setTotalPages(Math.ceil(todosFilteredAux.length / itemsPerPage))
+                }
+            })
             .catch((error) => console.error(error));
     }
     const addTodo = () => {
@@ -198,9 +203,8 @@ export const Todos = () => {
         onSubmit: setEditToDo
     });
 
-    const [dense, setDense] = useState(false);
     const [secondary, setSecondary] = useState(true);
-    const [filter, setFilter] = useState<Status | string>(Status.DONE);
+    const [filter, setFilter] = useState<Status | string>(Status.PENDING);
 
     const [open, setOpen] = useState(false);
     const [openDelete, setOpenDelete] = useState(false);
@@ -350,22 +354,18 @@ export const Todos = () => {
                                     <Button disabled variant='text'>{todoSelected.status}</Button>
                                     {(todoSelected.status == Status.PENDING || todoSelected.status == Status.IN_PROGRESS) &&
                                         <Stack direction='row' justifyContent={'end'} margin={0} spacing={0}>
-                                            <Autocomplete
-                                                id='status-option'
-                                                sx={{ width: '50%' }}
-                                                options={[Status.PENDING, Status.IN_PROGRESS, Status.DONE]}
+                                            <Select
+                                                id="filterTodoShow"
                                                 value={todoSelected.status}
-                                                onChange={(event, value) => {
-                                                    changeTodoStatus(todoSelected, value);
-                                                }}
-                                                renderInput={(params) =>
-                                                    <TextField
-                                                        {...params}
-                                                        label="change status"
-                                                        margin='none'
-                                                    // inputProps={{ readOnly: true }}
-                                                    />}
-                                            />
+                                                variant='outlined'
+                                                sx={{ width: '50%' }}
+                                                color='info'
+                                                onChange={(event) => { changeTodoStatus(todoSelected, event.target.value as Status) }}
+                                            >
+                                                <MenuItem value={Status.PENDING}>{Status.PENDING}</MenuItem>
+                                                <MenuItem value={Status.IN_PROGRESS}>{Status.IN_PROGRESS}</MenuItem>
+                                                <MenuItem value={Status.DONE}>{Status.DONE}</MenuItem>
+                                            </Select>
                                             <Button color='error' onClick={() => handleOpenDelete(todoSelected)}>
                                                 <Delete />
                                                 delete
@@ -459,19 +459,25 @@ export const Todos = () => {
                             value={filter}
                             label="filter"
                             variant='standard'
-                            onChange={(event) => {changeFilter(event.target.value)}}
+                            onChange={(event) => { changeFilter(event.target.value) }}
                         >
-                            <MenuItem value={"all"}>All</MenuItem>
+                            <MenuItem value={"all"}>all</MenuItem>
                             <MenuItem value={Status.PENDING}>{Status.PENDING}</MenuItem>
                             <MenuItem value={Status.IN_PROGRESS}>{Status.IN_PROGRESS}</MenuItem>
                             <MenuItem value={Status.DONE}>{Status.DONE}</MenuItem>
                         </Select>
                     </Box>
-                    <List dense={dense} sx={{maxHeight:'60vh', overflow:'scroll'}}>
+                    <List sx={{ maxHeight: '60vh', overflow: 'scroll' }}>
                         {filteredTodos().map((todo: any) => (
                             <Card key={todo._id} sx={{ marginBottom: '10px' }}>
                                 <ListItem >
-                                    <ListItemText onClick={() => showTodoModal(todo)}
+                                    <ListItemText
+                                        primaryTypographyProps={{ fontSize: '1.6rem' }}
+                                        secondaryTypographyProps={{
+                                            fontSize: '0.9rem', whiteSpace: 'nowrap',
+                                            overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '122ch'
+                                        }}
+                                        onClick={() => showTodoModal(todo)}
                                         primary={todo.title}
                                         secondary={secondary ? todo.description : null}
                                     />
@@ -497,6 +503,7 @@ export const Todos = () => {
                     <Pagination count={totalPages} variant="outlined" color="primary"
                         siblingCount={1}
                         boundaryCount={1}
+                        page={currentPage + 1}
                         onChange={(e, newPage) => handlePaginationChange(e, newPage)} />
                     <FormGroup row>
                         <FormControlLabel
