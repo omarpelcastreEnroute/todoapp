@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Alert, Autocomplete, Box, Button, Card, Checkbox, Container, FormControlLabel, FormGroup, Grid, IconButton, List, ListItem, ListItemAvatar, ListItemIcon, ListItemText, Modal, Pagination, Stack, styled, TextField, Typography } from '@mui/material';
+import { Alert, Autocomplete, Box, Button, Card, Checkbox, Container, FormControlLabel, FormGroup, Grid, IconButton, List, ListItem, ListItemAvatar, ListItemIcon, ListItemText, MenuItem, Modal, Pagination, Select, Stack, styled, TextField, Typography } from '@mui/material';
 import { AddCircleOutlineOutlined, CancelOutlined, Delete, SaveOutlined } from '@mui/icons-material';
 import EditIcon from '@mui/icons-material/Edit';
 import { Todo, Status } from '@nxreact/data'
@@ -19,8 +19,7 @@ const style = {
     boxShadow: 24,
     p: 4,
 };
-const itemsPerPage = 10;
-
+const itemsPerPage = 8;
 
 export const Todos = () => {
 
@@ -50,9 +49,27 @@ export const Todos = () => {
     const [currentPage, setCurrentPage] = useState(0)
     const [totalPages, setTotalPages] = useState(0)
     const filteredTodos = (): Todo[] => {
-        return todos.slice(currentPage*itemsPerPage, currentPage*itemsPerPage + itemsPerPage);
+        if (filter == 'all')
+            return todos.slice(currentPage * itemsPerPage, currentPage * itemsPerPage + itemsPerPage);
+
+        let todosFilteredAux = todos.filter((todo) => todo.status == filter)
+        // setCurrentPage(0)
+        //setTotalPages(Math.ceil(todosFilteredAux.length / itemsPerPage))
+        return todosFilteredAux.slice(currentPage * itemsPerPage, currentPage * itemsPerPage + itemsPerPage);
+
     }
 
+    const changeFilter = (value: Status | string) => {
+        if (value !== 'all'){
+            let todosFilteredAux = todos.filter((todo) => todo.status == value)
+            setCurrentPage(0)
+            setTotalPages(Math.ceil(todosFilteredAux.length / itemsPerPage))
+        }else{
+            setCurrentPage(0)
+            setTotalPages(Math.ceil(todos.length / itemsPerPage))
+        }
+        setFilter(value)
+    }
     useEffect(() => {
         getTodos()
     }, []);
@@ -60,7 +77,7 @@ export const Todos = () => {
     const getTodos = () => {
         fetch(url + '/api/todos')
             .then((response) => response.json())
-            .then((res) => {setTodos(res.todos); setTotalPages(Math.ceil(res.todos.length / itemsPerPage))})
+            .then((res) => { setTodos(res.todos); setTotalPages(Math.ceil(res.todos.length / itemsPerPage)) })
             .catch((error) => console.error(error));
     }
     const addTodo = () => {
@@ -183,6 +200,7 @@ export const Todos = () => {
 
     const [dense, setDense] = useState(false);
     const [secondary, setSecondary] = useState(true);
+    const [filter, setFilter] = useState<Status | string>(Status.DONE);
 
     const [open, setOpen] = useState(false);
     const [openDelete, setOpenDelete] = useState(false);
@@ -232,7 +250,7 @@ export const Todos = () => {
         handleOpenTodoView()
     }
 
-    const handlePaginationChange = (e:any, newPage:any) =>{
+    const handlePaginationChange = (e: any, newPage: any) => {
         setCurrentPage(newPage - 1);
     }
 
@@ -435,7 +453,21 @@ export const Todos = () => {
                     <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
                         Tasks
                     </Typography>
-                    <List dense={dense}>
+                    <Box display={'flex'} justifyContent={'end'}>
+                        <Select
+                            id="filterTodo"
+                            value={filter}
+                            label="filter"
+                            variant='standard'
+                            onChange={(event) => {changeFilter(event.target.value)}}
+                        >
+                            <MenuItem value={"all"}>All</MenuItem>
+                            <MenuItem value={Status.PENDING}>{Status.PENDING}</MenuItem>
+                            <MenuItem value={Status.IN_PROGRESS}>{Status.IN_PROGRESS}</MenuItem>
+                            <MenuItem value={Status.DONE}>{Status.DONE}</MenuItem>
+                        </Select>
+                    </Box>
+                    <List dense={dense} sx={{maxHeight:'60vh', overflow:'scroll'}}>
                         {filteredTodos().map((todo: any) => (
                             <Card key={todo._id} sx={{ marginBottom: '10px' }}>
                                 <ListItem >
@@ -462,10 +494,10 @@ export const Todos = () => {
                             </Card>
                         ))}
                     </List>
-                    <Pagination count={totalPages} variant="outlined" color="primary" 
+                    <Pagination count={totalPages} variant="outlined" color="primary"
                         siblingCount={1}
                         boundaryCount={1}
-                        onChange={(e,newPage)=>handlePaginationChange(e, newPage)} />
+                        onChange={(e, newPage) => handlePaginationChange(e, newPage)} />
                     <FormGroup row>
                         <FormControlLabel
                             control={
@@ -479,6 +511,6 @@ export const Todos = () => {
                     </FormGroup>
                 </Box>
             </Container>
-        </div>
+        </div >
     )
 }
