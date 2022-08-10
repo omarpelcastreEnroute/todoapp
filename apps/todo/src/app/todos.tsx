@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Alert, Autocomplete, Box, Button, Card, Checkbox, Container, FormControlLabel, FormGroup, Grid, IconButton, List, ListItem, ListItemAvatar, ListItemIcon, ListItemText, MenuItem, Modal, Pagination, Select, Stack, styled, TextField, Typography } from '@mui/material';
 import { AddCircleOutlineOutlined, CancelOutlined, Delete, SaveOutlined } from '@mui/icons-material';
 import EditIcon from '@mui/icons-material/Edit';
-import { Todo, Status } from '@nxreact/data'
+import { Todo, Status, VALIDATIONS } from '@nxreact/data'
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 
@@ -26,12 +26,12 @@ export const Todos = () => {
     const todoValidationSchema = Yup.object().shape({
         title: Yup.string()
             .required("Enter a title")
-            .min(12, 'Title must have at least 12 characters')
-            .max(120, 'Title can not be longer than 120 characters'),
+            .min(VALIDATIONS.TITLE.min, 'Title must have at least ' +VALIDATIONS.TITLE.min+' characters')
+            .max(VALIDATIONS.TITLE.max, 'Title can not be longer than '+VALIDATIONS.TITLE.max+' characters'),
         description: Yup.string()
             .required("Enter a description")
-            .min(100, 'description must have at least 100 characters')
-            .max(1000, 'description can not be longer than 1000 characters')
+            .min(VALIDATIONS.DESCRIPTION.min, 'description must have at least '+VALIDATIONS.DESCRIPTION.min+' characters')
+            .max(VALIDATIONS.DESCRIPTION.max, 'description can not be longer than '+VALIDATIONS.DESCRIPTION.max+' characters')
     });
     const todoEditValidationSchema = Yup.object().shape({
         title: Yup.string()
@@ -40,8 +40,8 @@ export const Todos = () => {
             .max(120, 'Title can not be longer than 120 characters'),
         description: Yup.string()
             .required("Enter a description")
-            .min(100, 'description must have at least 100 characters')
-            .max(1000, 'description can not be longer than 1000 characters'),
+            .min(VALIDATIONS.DESCRIPTION.min, 'description must have at least '+VALIDATIONS.DESCRIPTION.min+' characters')
+            .max(VALIDATIONS.DESCRIPTION.max, 'description can not be longer than '+VALIDATIONS.DESCRIPTION.max+' characters'),
         status: Yup.mixed().oneOf([Status.PENDING, Status.IN_PROGRESS, Status.DONE]).required()
     });
 

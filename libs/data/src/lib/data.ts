@@ -9,3 +9,14 @@ export enum Status {
   IN_PROGRESS = 'in progress',
   DONE = 'done',
 }
+
+export const VALIDATIONS = {
+  TITLE:{
+    min: 10,
+    max: 120
+  },
+  DESCRIPTION: {
+    min: 100,
+    max: 1000
+  }
+}

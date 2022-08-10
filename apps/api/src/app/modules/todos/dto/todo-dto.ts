@@ -1,18 +1,17 @@
-import { Type } from "class-transformer";
-import { IsDate, IsEmail, IsEnum, isNotEmpty, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
-import { Status } from '@nxreact/data'
+import { IsEnum, IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
+import { Status, VALIDATIONS } from '@nxreact/data'
 export class TodoDto{
 
     @IsNotEmpty()
     @IsString()
-    @MinLength(10)
-    @MaxLength(120)
+    @MinLength(VALIDATIONS.TITLE.min)
+    @MaxLength(VALIDATIONS.TITLE.min)
     title: string;
 
     @IsNotEmpty()
     @IsString()
-    @MinLength(100)
-    @MaxLength(1000)
+    @MinLength(VALIDATIONS.DESCRIPTION.min)
+    @MaxLength(VALIDATIONS.DESCRIPTION.max)
     description: string;
 
     @IsNotEmpty()
