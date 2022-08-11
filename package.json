@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "start": "nx serve",
+    "start": "nx run-many --target=serve",
     "build": "nx build",
-    "test": "nx test"
+    "test": "nx run-many --target=test --projects=api,todo"
   },
   "private": true,
   "dependencies": {
