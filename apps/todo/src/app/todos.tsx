@@ -26,22 +26,22 @@ export const Todos = () => {
     const todoValidationSchema = Yup.object().shape({
         title: Yup.string()
             .required("Enter a title")
-            .min(VALIDATIONS.TITLE.min, 'Title must have at least ' +VALIDATIONS.TITLE.min+' characters')
-            .max(VALIDATIONS.TITLE.max, 'Title can not be longer than '+VALIDATIONS.TITLE.max+' characters'),
+            .min(VALIDATIONS.TITLE.min, 'Title must have at least ' + VALIDATIONS.TITLE.min + ' characters')
+            .max(VALIDATIONS.TITLE.max, 'Title can not be longer than ' + VALIDATIONS.TITLE.max + ' characters'),
         description: Yup.string()
             .required("Enter a description")
-            .min(VALIDATIONS.DESCRIPTION.min, 'description must have at least '+VALIDATIONS.DESCRIPTION.min+' characters')
-            .max(VALIDATIONS.DESCRIPTION.max, 'description can not be longer than '+VALIDATIONS.DESCRIPTION.max+' characters')
+            .min(VALIDATIONS.DESCRIPTION.min, 'description must have at least ' + VALIDATIONS.DESCRIPTION.min + ' characters')
+            .max(VALIDATIONS.DESCRIPTION.max, 'description can not be longer than ' + VALIDATIONS.DESCRIPTION.max + ' characters')
     });
     const todoEditValidationSchema = Yup.object().shape({
         title: Yup.string()
             .required("Enter a title")
-            .min(VALIDATIONS.TITLE.min, 'Title must have at least ' +VALIDATIONS.TITLE.min+' characters')
-            .max(VALIDATIONS.TITLE.max, 'Title can not be longer than '+VALIDATIONS.TITLE.max+' characters'),
+            .min(VALIDATIONS.TITLE.min, 'Title must have at least ' + VALIDATIONS.TITLE.min + ' characters')
+            .max(VALIDATIONS.TITLE.max, 'Title can not be longer than ' + VALIDATIONS.TITLE.max + ' characters'),
         description: Yup.string()
             .required("Enter a description")
-            .min(VALIDATIONS.DESCRIPTION.min, 'description must have at least '+VALIDATIONS.DESCRIPTION.min+' characters')
-            .max(VALIDATIONS.DESCRIPTION.max, 'description can not be longer than '+VALIDATIONS.DESCRIPTION.max+' characters'),
+            .min(VALIDATIONS.DESCRIPTION.min, 'description must have at least ' + VALIDATIONS.DESCRIPTION.min + ' characters')
+            .max(VALIDATIONS.DESCRIPTION.max, 'description can not be longer than ' + VALIDATIONS.DESCRIPTION.max + ' characters'),
         status: Yup.mixed().oneOf([Status.PENDING, Status.IN_PROGRESS, Status.DONE]).required()
     });
 
@@ -74,24 +74,27 @@ export const Todos = () => {
         fetch(url + '/api/todos')
             .then((response) => response.json())
             .then((res) => {
-                if(res.todos){
+                if (res.todos) {
                     setTodos(res.todos);
                     if (filter == 'all')
                         setTotalPages(Math.ceil(res.todos.length / itemsPerPage))
                     else {
-                        let todosFilteredAux = res.todos.filter((todo:Todo) => todo.status == filter)
+                        let todosFilteredAux = res.todos.filter((todo: Todo) => todo.status == filter)
                         setCurrentPage(0)
                         setTotalPages(Math.ceil(todosFilteredAux.length / itemsPerPage))
                     }
-                }else{
-                    if(res.message)
+                } else {
+                    if (res.message)
                         setErrorMessage(res.message)
                     else
                         setErrorMessage("Something went wrong trying to get todos")
                     setError(true)
                 }
             })
-            .catch((error) => console.error(error));
+            .catch((error) => {
+                setErrorMessage("Something went wrong trying to get todos")
+                setError(true)
+            });
     }
     const addTodo = () => {
         fetch(url + '/api/todos', {
@@ -306,11 +309,11 @@ export const Todos = () => {
                                             onClick={handleClose}
                                         >
                                             <CancelOutlined />
-                                            cancel
+                                            CANCEL
                                         </Button>
                                         <Button variant="outlined" color='success' size="large" type='submit'>
                                             <AddCircleOutlineOutlined />
-                                            Create
+                                            CREATE
                                         </Button>
                                     </Stack>
                                 </Stack>
@@ -454,10 +457,10 @@ export const Todos = () => {
                     </Modal>
                 </div>
                 <Typography variant='h2'> Todo App</Typography>
-                <Button variant="contained" onClick={handleOpen} >Create New Task</Button>
-                <Box sx={{ flexGrow: 1 }}>
-                    {successDelete && <Alert sx={{ margin: '20px' }} severity="success">Todo has been deleted succesfully</Alert>}
-                    {error && <Alert sx={{ margin: '20px' }} severity="error">{errorMessage}</Alert>}
+                <Button variant="contained" onClick={handleOpen} >CREATE NEW TASK</Button>
+                {error && <Alert sx={{ margin: '20px' }} severity="error">{errorMessage}</Alert>}
+                {successDelete && <Alert sx={{ margin: '20px' }} severity="success">Todo has been deleted succesfully</Alert>}
+                {todos.length > 0 && <Box sx={{ flexGrow: 1 }}>
                     <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
                         Tasks
                     </Typography>
@@ -525,6 +528,7 @@ export const Todos = () => {
                         />
                     </FormGroup>
                 </Box>
+                }
             </Container>
         </div >
     )
