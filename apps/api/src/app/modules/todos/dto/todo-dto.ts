@@ -5,7 +5,7 @@ export class TodoDto{
     @IsNotEmpty()
     @IsString()
     @MinLength(VALIDATIONS.TITLE.min)
-    @MaxLength(VALIDATIONS.TITLE.min)
+    @MaxLength(VALIDATIONS.TITLE.max)
     title: string;
 
     @IsNotEmpty()

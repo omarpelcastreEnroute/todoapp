@@ -36,8 +36,8 @@ export const Todos = () => {
     const todoEditValidationSchema = Yup.object().shape({
         title: Yup.string()
             .required("Enter a title")
-            .min(12, 'Title must have at least 12 characters')
-            .max(120, 'Title can not be longer than 120 characters'),
+            .min(VALIDATIONS.TITLE.min, 'Title must have at least ' +VALIDATIONS.TITLE.min+' characters')
+            .max(VALIDATIONS.TITLE.max, 'Title can not be longer than '+VALIDATIONS.TITLE.max+' characters'),
         description: Yup.string()
             .required("Enter a description")
             .min(VALIDATIONS.DESCRIPTION.min, 'description must have at least '+VALIDATIONS.DESCRIPTION.min+' characters')

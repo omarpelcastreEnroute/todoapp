@@ -23,7 +23,7 @@ export class TodosService {
 
     async getTodos(){
         try{
-            const todos = await this.todoModel.find({})
+            const todos = await this.todoModel.find({}).sort('-updatedAt')
             return {todos}
         }catch(error){
             throw new InternalServerErrorException()
@@ -33,10 +33,10 @@ export class TodosService {
     async updateTodo(id:string, updateTodo: TodoDto){
         try {
             const todoEdited = await this.todoModel.findByIdAndUpdate(id, updateTodo, {new:true}) 
-            return {todo: todoEdited}
+            if(todoEdited)
+                return {todo: todoEdited, statusCode: 200}
+            throw new NotFoundException('todo not found')
         } catch (error) {
-            console.log(error);
-            
             throw new InternalServerErrorException()
         }
     }
@@ -47,8 +47,6 @@ export class TodosService {
             if(!todo._id)
                 return new NotFoundException('todo not found')
             return true
-
-            
         } catch (error) {
             throw new InternalServerErrorException()
         }
