@@ -13,7 +13,6 @@ const style = {
     left: '50%',
     transform: 'translate(-50%, -50%)',
     width: 'auto',
-    minWidth: '400px',
     bgcolor: 'background.paper',
     borderRadius: '20px',
     boxShadow: 24,
@@ -109,6 +108,7 @@ export const Todos = () => {
                 if (res.todo) {
                     setSuccess(true)
                     getTodos()
+                    formik.resetForm()
                 }
                 else {
                     setError(true)
@@ -198,13 +198,13 @@ export const Todos = () => {
         description: '',
         status: Status.PENDING
     })
-
+    const initialValues = {
+        title: '',
+        description: '',
+        status: Status.PENDING
+    }
     const formik = useFormik<Todo>({
-        initialValues: {
-            title: '',
-            description: '',
-            status: Status.PENDING
-        },
+        initialValues: initialValues,
         validationSchema: todoValidationSchema,
         onSubmit: addTodo
     });
@@ -268,6 +268,10 @@ export const Todos = () => {
     const handlePaginationChange = (e: any, newPage: any) => {
         setCurrentPage(newPage - 1);
     }
+    const closeCreateForm = () => {
+        formik.resetForm()
+        handleClose()
+    }
 
     return (
         <div>
@@ -306,7 +310,7 @@ export const Todos = () => {
                                     />
                                     <Stack direction={'row'} justifyContent='center' spacing={2}>
                                         <Button variant="outlined" size="large" color='secondary'
-                                            onClick={handleClose}
+                                            onClick={closeCreateForm}
                                         >
                                             <CancelOutlined />
                                             CANCEL
@@ -456,12 +460,13 @@ export const Todos = () => {
                         </Box>
                     </Modal>
                 </div>
-                <Typography variant='h2'> Todo App</Typography>
-                <Button variant="contained" onClick={handleOpen} >CREATE NEW TASK</Button>
+                <Box display={'flex'} justifyContent={'end'} margin={3}>
+                    <Button variant="contained" onClick={handleOpen} >CREATE NEW TASK</Button>
+                </Box>
                 {error && <Alert sx={{ margin: '20px' }} severity="error">{errorMessage}</Alert>}
                 {successDelete && <Alert sx={{ margin: '20px' }} severity="success">Todo has been deleted succesfully</Alert>}
                 {todos.length > 0 && <Box sx={{ flexGrow: 1 }}>
-                    <Typography sx={{ mt: 4, mb: 2 }} variant="h6" component="div">
+                    <Typography variant="h6">
                         Tasks
                     </Typography>
                     <Box display={'flex'} justifyContent={'end'}>
@@ -483,9 +488,9 @@ export const Todos = () => {
                             <Card key={todo._id} sx={{ marginBottom: '10px' }}>
                                 <ListItem >
                                     <ListItemText
-                                        primaryTypographyProps={{ fontSize: '1.6rem' }}
+                                        primaryTypographyProps={{ fontSize: '1.2rem' }}
                                         secondaryTypographyProps={{
-                                            fontSize: '0.9rem', whiteSpace: 'nowrap',
+                                            fontSize: '0.9rem', whiteSpace: 'nowrap', fontStyle: 'italic',
                                             overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '122ch'
                                         }}
                                         onClick={() => showTodoModal(todo)}
